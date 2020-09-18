@@ -17,12 +17,10 @@ export function useChainId() {
     const maskbookChainId = useValueRef(currentMaskbookChainIdSettings)
     const metamaskChainId = useValueRef(currentMetaMaskChainIdSettings)
     const walletconnectChainId = useValueRef(currentWalletConnectChainIdSettings)
-
-    const chainId = useMemo(() => {
+    return useMemo(() => {
         if (wallet?.provider === ProviderType.Maskbook) return maskbookChainId
         if (wallet?.provider === ProviderType.MetaMask) return metamaskChainId
         if (wallet?.provider === ProviderType.WalletConnect) return walletconnectChainId
         return ChainId.Mainnet
-    }, [wallet?.address, wallet?.provider, maskbookChainId, metamaskChainId, walletconnectChainId])
-    return chainId
+    }, [wallet?.provider, maskbookChainId, metamaskChainId, walletconnectChainId])
 }

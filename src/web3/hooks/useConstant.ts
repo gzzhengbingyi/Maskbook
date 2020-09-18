@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { ChainId } from '../types'
 import { CONSTANTS, getConstant, getAllConstants } from '../constants'
 import { useChainId } from './useChainId'
 

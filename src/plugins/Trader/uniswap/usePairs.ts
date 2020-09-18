@@ -1,7 +1,6 @@
-import { useMemo, useEffect } from 'react'
+import { useMemo } from 'react'
 import { useAsync } from 'react-use'
 import { Pair as UniswapPair, Token as UniswapToken, Pair, TokenAmount } from '@uniswap/sdk'
-import { useChainId } from '../../../web3/hooks/useChainId'
 import { usePairContract } from '../contracts/usePairContract'
 import { useConstant } from '../../../web3/hooks/useConstant'
 
@@ -60,7 +59,3 @@ export function useUniswapPairs(tokens: readonly TokenPair[]) {
         })
     }, [results, tokens])
 }
-
-// export function usePair(tokenA: UniswapToken, tokenB: UniswapToken) {
-//     return useUniswapPairs([[tokenA, tokenB]])[0]
-// }

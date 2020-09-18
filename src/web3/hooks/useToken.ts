@@ -2,12 +2,14 @@ import { useAsync } from 'react-use'
 import { useAccount } from './useAccount'
 import { useERC20TokenContract } from './useContract'
 import { Token, EthereumTokenType } from '../types'
+import { useChainId } from './useChainId'
 
 function resolveSettleResult<T>(result: PromiseSettledResult<T>, fallback: T) {
     return result.status === 'fulfilled' ? result.value : fallback
 }
 
-export function useToken(type: EthereumTokenType, token: Partial<Token> & { address: string }) {
+export function useToken(type: EthereumTokenType, token: PartialRequired<Token, 'address'>) {
+    const chainId = useChainId()
     const account = useAccount()
     const erc20Contract = useERC20TokenContract(token.address)
 
@@ -33,6 +35,7 @@ export function useToken(type: EthereumTokenType, token: Partial<Token> & { addr
                 erc20Contract.methods.decimals().call(),
             ])
             return {
+                chainId: token.chainId ?? chainId,
                 address: token.address,
                 name: resolveSettleResult(name_, token.name ?? ''),
                 symbol: resolveSettleResult(symbol_, token.symbol ?? ''),
@@ -43,5 +46,5 @@ export function useToken(type: EthereumTokenType, token: Partial<Token> & { addr
         // TODO:
         // ERC721
         return
-    }, [account, type, token.address])
+    }, [account, chainId, type, token.address])
 }
