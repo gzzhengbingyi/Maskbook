@@ -12,10 +12,10 @@ export enum TradeStrategy {
 }
 
 export function useBestTrade(
-    inputToken: Token,
-    outputToken: Token,
     amount: string,
     strategy: TradeStrategy = TradeStrategy.ExactIn,
+    inputToken?: Token,
+    outputToken?: Token,
 ) {
     const isExactIn = strategy === TradeStrategy.ExactIn
     const bestTradeExactIn = useBestTradeExactIn(

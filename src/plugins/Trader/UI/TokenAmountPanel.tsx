@@ -11,12 +11,12 @@ import {
     ChipProps,
     TextFieldProps,
 } from '@material-ui/core'
-import type { TokenForUI } from '../types'
 import { MIN_AMOUNT_LENGTH, MAX_AMOUNT_LENGTH } from '../constants'
 import { SelectTokenChip, SelectTokenChipProps } from './SelectTokenChip'
 import { formatBalance } from '../../Wallet/formatter'
 import BigNumber from 'bignumber.js'
 import { useCapturedEvents } from '../../../utils/hooks/useCapturedEvents'
+import type { Token } from '../../../web3/types'
 
 const useStyles = makeStyles((theme: Theme) => {
     return createStyles({
@@ -47,7 +47,7 @@ export interface TokenAmountPanelProps {
     amount: string
     onAmountChange: (amount: string) => void
     label: string
-    token?: TokenForUI | null
+    token?: Token | null
     InputProps?: Partial<InputProps>
     MaxChipProps?: Partial<ChipProps>
     SelectTokenChip?: Partial<SelectTokenChipProps>

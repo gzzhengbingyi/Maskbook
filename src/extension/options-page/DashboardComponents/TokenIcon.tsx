@@ -30,7 +30,7 @@ export function TokenIcon(props: TokenIconProps) {
             src={
                 isSameAddress(ETH_ADDRESS, checksumAddress)
                     ? 'https://rawcdn.githack.com/trustwallet/assets/257c82b25e6f27ede7a2b309aadc0ed17bca45ae/blockchains/ethereum/info/logo.png'
-                    : `https://rawcdn.githack.com/trustwallet/assets/257c82b25e6f27ede7a2b309aadc0ed17bca45ae/blockchains/ethereum/assets/${checksumAddress}/logo.png`
+                    : `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${checksumAddress}/logo.png`
             }>
             {name?.substr(0, 1).toLocaleUpperCase()}
         </Avatar>

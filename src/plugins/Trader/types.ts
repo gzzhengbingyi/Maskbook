@@ -1,5 +1,3 @@
-import type { Token } from '../../web3/types'
-
 export interface Settings {
     currency: Currency
 }
@@ -30,10 +28,6 @@ export interface Coin {
     description?: string
     market_cap_rank?: number
     eth_address?: string
-}
-
-export interface TokenForUI extends Token {
-    logo?: string
 }
 
 export interface Market {

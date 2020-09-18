@@ -3,17 +3,18 @@ import type { Token } from '../../../web3/types'
 import { UniswapTradeSummary, UniswapTradeSummaryProps } from './UniswapTradeSummary'
 import { UniswapTradeForm, UniswapTradeFormProps } from './UniswapTradeForm'
 import { TradeStrategy, useBestTrade } from '../uniswap/useBestTrade'
+import { UniswapTradeRoute } from './UniswapTradeRoute'
 
 export interface UniswapTradeProps {
     reversed: boolean
-    inputToken: Token
-    outputToken: Token
+    inputToken?: Token
+    outputToken?: Token
     UniswapTradeFormProps?: Partial<UniswapTradeFormProps>
     UniswapTradeSummaryProps?: Partial<UniswapTradeSummaryProps>
 }
 
 export function UniswapTrade(props: UniswapTradeProps) {
-    const { inputToken, outputToken, reversed } = props
+    const { reversed, inputToken, outputToken } = props
 
     const [tradeStrategy, setTradeStrategy] = useState(TradeStrategy.ExactIn)
     const [inputAmount, setInputAmount] = useState('0')
@@ -37,21 +38,18 @@ export function UniswapTrade(props: UniswapTradeProps) {
     )
 
     const trade = useBestTrade(
-        !reversed ? inputToken : outputToken,
-        !reversed ? outputToken : inputToken,
         (tradeStrategy === TradeStrategy.ExactIn) === !reversed ? inputAmount : outputAmount,
         tradeStrategy,
+        !reversed ? inputToken : outputToken,
+        !reversed ? outputToken : inputToken,
     )
     const estimatedInputAmount =
         tradeStrategy === TradeStrategy.ExactOut ? trade.v2Trade?.inputAmount.raw.toString() ?? '' : ''
     const estimatedOutputAmount =
         tradeStrategy === TradeStrategy.ExactIn ? trade.v2Trade?.outputAmount.raw.toString() ?? '' : ''
 
-    console.log({
-        tradeStrategy,
-        estimatedInputAmount,
-        estimatedOutputAmount,
-    })
+    console.log('DEBUG: pairs')
+    console.log(trade.v2Trade?.route)
 
     return (
         <>
@@ -72,6 +70,7 @@ export function UniswapTrade(props: UniswapTradeProps) {
                 outputToken={outputToken}
                 {...props.UniswapTradeSummaryProps}
             />
+            <UniswapTradeRoute trade={trade.v2Trade} />
         </>
     )
 }

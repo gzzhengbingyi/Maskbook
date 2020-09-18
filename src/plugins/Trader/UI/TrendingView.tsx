@@ -254,7 +254,13 @@ export function TrendingView(props: TrendingViewProps) {
                         </>
                     ) : null}
                     {tabIndex === 1 ? <TickersTable tickers={tickers} platform={dataProvider} /> : null}
-                    {tabIndex === 2 && canSwap ? <UniswapTrader address={coin.eth_address ?? ETH_ADDRESS} /> : null}
+                    {tabIndex === 2 && canSwap ? (
+                        <UniswapTrader
+                            address={coin.eth_address ?? ETH_ADDRESS}
+                            name={coin.name}
+                            symbol={coin.symbol}
+                        />
+                    ) : null}
                 </Paper>
             </CardContent>
             <CardActions className={classes.footer}>

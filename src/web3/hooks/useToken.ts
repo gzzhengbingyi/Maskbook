@@ -7,42 +7,41 @@ function resolveSettleResult<T>(result: PromiseSettledResult<T>, fallback: T) {
     return result.status === 'fulfilled' ? result.value : fallback
 }
 
-export function useToken(type: EthereumTokenType, address: string) {
+export function useToken(type: EthereumTokenType, token: Partial<Token> & { address: string }) {
     const account = useAccount()
-    const erc20Contract = useERC20TokenContract(address)
+    const erc20Contract = useERC20TokenContract(token.address)
 
     return useAsync(async () => {
-        if (!account) return null
-        if (!address) return null
+        if (!account) return
+        if (!token.address) return
 
         // Ether
-        if (type === EthereumTokenType.Ether) {
+        if (type === EthereumTokenType.Ether)
             return {
-                address,
+                address: token.address,
                 name: 'Ether',
                 symbol: 'ETH',
                 decimals: 18,
             } as Token
-        }
 
         // ERC20
         if (type === EthereumTokenType.ERC20) {
-            if (!erc20Contract) return null
-            const [name, symbol, decimals] = await Promise.allSettled([
+            if (!erc20Contract) return
+            const [name_, symbol_, decimals_] = await Promise.allSettled([
                 erc20Contract.methods.name().call(),
                 erc20Contract.methods.symbol().call(),
                 erc20Contract.methods.decimals().call(),
             ])
             return {
-                address,
-                name: resolveSettleResult(name, ''),
-                symbol: resolveSettleResult(symbol, ''),
-                decimals: Number.parseInt(resolveSettleResult(decimals, '0')),
+                address: token.address,
+                name: resolveSettleResult(name_, token.name ?? ''),
+                symbol: resolveSettleResult(symbol_, token.symbol ?? ''),
+                decimals: Number.parseInt(resolveSettleResult(decimals_, String(token.decimals ?? 0))),
             } as Token
         }
 
         // TODO:
         // ERC721
-        return null
-    }, [account, type, address])
+        return
+    }, [account, type, token.address])
 }

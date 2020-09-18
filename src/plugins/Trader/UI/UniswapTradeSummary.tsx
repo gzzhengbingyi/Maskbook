@@ -18,7 +18,7 @@ import type { Token } from '../../../web3/types'
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         root: {
-            width: 350,
+            width: 320,
             margin: theme.spacing(0, 'auto', 2),
         },
 
@@ -41,8 +41,8 @@ const useStyles = makeStyles((theme: Theme) =>
 export interface UniswapTradeSummaryProps {
     trade: Trade | null
     reversed: boolean
-    inputToken: Token
-    outputToken: Token
+    inputToken?: Token
+    outputToken?: Token
 }
 
 export function UniswapTradeSummary(props: UniswapTradeSummaryProps) {
@@ -56,6 +56,7 @@ export function UniswapTradeSummary(props: UniswapTradeSummaryProps) {
 
     const isExactIn = trade.tradeType === TradeType.EXACT_INPUT
     const sortedTokens = [inputToken, outputToken].sort(() => (reversed ? -1 : 1))
+    if (sortedTokens.length !== 2 || !sortedTokens[0] || !sortedTokens[1]) return null
 
     const records = [
         trade.outputAmount.greaterThan('0')
@@ -70,7 +71,7 @@ export function UniswapTradeSummary(props: UniswapTradeSummaryProps) {
                   ),
               }
             : null,
-        isExactIn
+        trade.tradeType === TradeType.EXACT_INPUT
             ? {
                   title: 'Minimum received',
                   children: (
@@ -80,7 +81,7 @@ export function UniswapTradeSummary(props: UniswapTradeSummaryProps) {
                   ),
               }
             : null,
-        !isExactIn
+        trade.tradeType === TradeType.EXACT_OUTPUT
             ? {
                   title: 'Maximum sold',
                   children: (

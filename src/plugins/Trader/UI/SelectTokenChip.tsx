@@ -2,9 +2,9 @@ import React from 'react'
 import classNames from 'classnames'
 import { makeStyles, Theme, createStyles, Chip, Avatar, ChipProps, CircularProgress } from '@material-ui/core'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
-import type { TokenForUI } from '../types'
 import { noop } from 'lodash-es'
 import { TokenIcon } from '../../../extension/options-page/DashboardComponents/TokenIcon'
+import type { Token } from '../../../web3/types'
 
 const useStyles = makeStyles((theme: Theme) => {
     return createStyles({
@@ -23,7 +23,7 @@ const useStyles = makeStyles((theme: Theme) => {
 })
 
 export interface SelectTokenChipProps {
-    token?: TokenForUI | null
+    token?: Token | null
     loading?: boolean
     readonly?: boolean
     ChipProps?: Partial<ChipProps>
@@ -50,13 +50,7 @@ export function SelectTokenChip(props: SelectTokenChipProps) {
     return (
         <Chip
             className={classes.chip}
-            icon={
-                token.logo ? (
-                    <Avatar src={token.logo} alt={token.symbol} />
-                ) : (
-                    <TokenIcon address={token.address} name={token.name} />
-                )
-            }
+            icon={<TokenIcon address={token.address} name={token.name} />}
             deleteIcon={readonly ? undefined : <ExpandMoreIcon className={classes.icon} />}
             color="default"
             size="small"

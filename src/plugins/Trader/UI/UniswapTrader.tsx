@@ -26,12 +26,14 @@ const useStyles = makeStyles((theme: Theme) => {
 
 export interface UniswapTraderProps extends withClasses<KeysInferFromUseStyles<typeof useStyles>> {
     address: string
+    name: string
+    symbol: string
 }
 
 export function UniswapTrader(props: UniswapTraderProps) {
     const ETH_ADDRESS = useConstant('ETH_ADDRESS')
 
-    const { address } = props
+    const { address, name, symbol } = props
     const classes = useStylesExtends(useStyles(), props)
 
     //#region get token info from chain
@@ -45,18 +47,24 @@ export function UniswapTrader(props: UniswapTraderProps) {
 
     const { value: inputToken, loading: loadingInputToken, error: errorInputToken } = useToken(
         isEtherInputToken ? EthereumTokenType.Ether : EthereumTokenType.ERC20,
-        isEtherInputToken ? ETH_ADDRESS : inputTokenAddress,
+        {
+            address: isEtherInputToken ? ETH_ADDRESS : inputTokenAddress,
+        },
     )
     const { value: outputToken, loading: loadingOutputToken, error: errorOutputToken } = useToken(
         isEtherOutputToken ? EthereumTokenType.Ether : EthereumTokenType.ERC20,
-        isEtherOutputToken ? ETH_ADDRESS : outputTokenAddress,
+        {
+            address: isEtherOutputToken ? ETH_ADDRESS : outputTokenAddress,
+            name,
+            symbol,
+        },
     )
     //#endregion
 
     //#region select token
     const [focusedTokenAddress, setFocusedTokenAddress] = useState<string>('')
 
-    // select token in remote controlled dialog
+    // select token in the remote controlled dialog
     const [, setOpen] = useRemoteControlledDialog<MaskbookWalletMessages, 'selectERC20TokenDialogUpdated'>(
         MessageCenter,
         'selectERC20TokenDialogUpdated',
@@ -95,17 +103,15 @@ export function UniswapTrader(props: UniswapTraderProps) {
 
     return (
         <div className={classes.root}>
-            {inputToken && outputToken ? (
-                <UniswapTrade
-                    reversed={reversed}
-                    inputToken={inputToken}
-                    outputToken={outputToken}
-                    UniswapTradeFormProps={{
-                        onReverseClick: () => setReversed((x) => !x),
-                        onTokenChipClick,
-                    }}
-                />
-            ) : null}
+            <UniswapTrade
+                reversed={reversed}
+                inputToken={inputToken}
+                outputToken={outputToken}
+                UniswapTradeFormProps={{
+                    onReverseClick: () => setReversed((x) => !x),
+                    onTokenChipClick,
+                }}
+            />
             {loadingInputToken || loadingOutputToken ? (
                 <CircularProgress className={classes.progress} size={15} />
             ) : null}

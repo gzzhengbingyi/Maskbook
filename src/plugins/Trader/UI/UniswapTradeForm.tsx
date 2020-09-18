@@ -36,8 +36,8 @@ const useStyles = makeStyles((theme: Theme) => {
 
 export interface UniswapTradeFormProps extends withClasses<KeysInferFromUseStyles<typeof useStyles>> {
     reversed: boolean
-    inputToken: Token
-    outputToken: Token
+    inputToken?: Token
+    outputToken?: Token
     inputAmount: string
     outputAmount: string
     onAmountInChange: (amount: string) => void
