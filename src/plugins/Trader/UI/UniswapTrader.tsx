@@ -95,12 +95,6 @@ export function UniswapTrader(props: UniswapTraderProps) {
     )
     //#endregion
 
-    console.log('DEBUG: fetching tokens')
-    console.log({
-        inputToken,
-        outputToken,
-    })
-
     return (
         <div className={classes.root}>
             <UniswapTrade

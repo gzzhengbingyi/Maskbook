@@ -48,9 +48,6 @@ export function UniswapTrade(props: UniswapTradeProps) {
     const estimatedOutputAmount =
         tradeStrategy === TradeStrategy.ExactIn ? trade.v2Trade?.outputAmount.raw.toString() ?? '' : ''
 
-    console.log('DEBUG: pairs')
-    console.log(trade.v2Trade?.route)
-
     return (
         <>
             <UniswapTradeForm

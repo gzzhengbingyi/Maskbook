@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import classNames from 'classnames'
 import { noop } from 'lodash-es'
 import { makeStyles, Theme, createStyles, Typography } from '@material-ui/core'
@@ -8,6 +8,9 @@ import ActionButton from '../../../extension/options-page/DashboardComponents/Ac
 import { TokenAmountPanel } from './TokenAmountPanel'
 import BigNumber from 'bignumber.js'
 import type { Token } from '../../../web3/types'
+import { useAccount } from '../../../web3/hooks/useAccount'
+import { useRemoteControlledDialog } from '../../../utils/hooks/useRemoteControlledDialog'
+import { MaskbookWalletMessages, MessageCenter } from '../../Wallet/messages'
 
 const useStyles = makeStyles((theme: Theme) => {
     return createStyles({
@@ -61,11 +64,29 @@ export function UniswapTradeForm(props: UniswapTradeFormProps) {
         onTokenChipClick = noop,
     } = props
 
+    const account = useAccount()
+
     const tradeAmountA = new BigNumber(inputAmount)
     const tradeAmountB = new BigNumber(outputAmount)
 
     const balanceA = new BigNumber('0')
     const balanceB = new BigNumber('0')
+
+    //#region remote controll select provider dialog
+    const [, setOpen] = useRemoteControlledDialog<MaskbookWalletMessages, 'selectProviderDialogUpdated'>(
+        MessageCenter,
+        'selectProviderDialogUpdated',
+    )
+    //#endregion
+
+    const onSubmit = useCallback(() => {
+        if (!account) {
+            setOpen({
+                open: true,
+            })
+            return
+        }
+    }, [])
 
     const sections = [
         {
@@ -139,15 +160,17 @@ export function UniswapTradeForm(props: UniswapTradeFormProps) {
                     variant="contained"
                     size="large"
                     disabled={
-                        !inputToken?.address ||
-                        !outputToken?.address ||
-                        tradeAmountA.isZero() ||
-                        tradeAmountB.isZero() ||
-                        tradeAmountA.isGreaterThan(balanceA) ||
-                        tradeAmountB.isGreaterThan(balanceB)
+                        !!account &&
+                        (!inputToken?.address ||
+                            !outputToken?.address ||
+                            tradeAmountA.isZero() ||
+                            tradeAmountB.isZero() ||
+                            tradeAmountA.isGreaterThan(balanceA) ||
+                            tradeAmountB.isGreaterThan(balanceB))
                     }
-                    onClick={() => console.log('clicked!')}>
+                    onClick={onSubmit}>
                     {(() => {
+                        if (!account) return 'Connect a Wallet'
                         if (tradeAmountA.isZero() || tradeAmountB.isZero()) return 'Enter an amount'
                         if (!inputToken || !outputToken) {
                             if (!reversed && tradeAmountA.isPositive()) return 'Select a token'

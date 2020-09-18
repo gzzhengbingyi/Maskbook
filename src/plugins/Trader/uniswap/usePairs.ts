@@ -40,7 +40,7 @@ export function useUniswapPairs(tokens: readonly TokenPair[]) {
                 }),
             ),
         )
-    }, [pairAddresses.join()])
+    }, [pairAddresses.join(), pairContract])
 
     return useMemo(() => {
         if (tokens.length !== results.length) return []

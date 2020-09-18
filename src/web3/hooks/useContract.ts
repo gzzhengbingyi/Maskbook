@@ -1,9 +1,8 @@
 import { useMemo } from 'react'
 import { EthereumAddress } from 'wallet.ts'
 import type { Contract } from 'web3-eth-contract'
+import type { TransactionConfig } from 'web3-core'
 import type { AbiItem, AbiOutput } from 'web3-utils'
-import ERC20ABI from '../../contracts/splitter/ERC20.json'
-import type { Erc20 as ERC20 } from '../../contracts/splitter/ERC20'
 import Services from '../../extension/service'
 import { useAccount } from './useAccount'
 import { web3 } from '../web3'
@@ -31,9 +30,6 @@ export function useContract<T extends Contract>(address: string, ABI: AbiItem[])
         // no a valid contract address
         if (!EthereumAddress.isValid(address)) return null
 
-        // no account
-        if (!account) return null
-
         const contract = new web3.eth.Contract(ABI, address) as T
 
         return Object.assign(contract, {
@@ -46,25 +42,27 @@ export function useContract<T extends Contract>(address: string, ABI: AbiItem[])
                     return (...args: any[]) => {
                         const cached = method(...args)
                         return {
-                            async call(config: Object) {
+                            async call(config: TransactionConfig) {
+                                const result = await Services.Ethereum.callTransaction(account, {
+                                    to: contract.options.address,
+                                    data: cached.encodeABI(),
+                                    ...config,
+                                })
+
                                 console.log('DEBUG: call')
                                 console.log({
                                     name,
                                     config,
+                                    result,
                                 })
 
-                                return decodeHexString(
-                                    methodABI ? methodABI.outputs ?? [] : [],
-                                    await Services.Ethereum.callTransaction(account, {
-                                        to: contract.options.address,
-                                        data: cached.encodeABI(),
-                                        ...config,
-                                    }),
-                                )
+                                return decodeHexString(methodABI ? methodABI.outputs ?? [] : [], result)
                             },
-                            send(config: Object) {
-                                console.log('DEUBG: send')
+                            send(config: TransactionConfig) {
+                                if (!account) throw new Error('cannot find account')
+                                console.log('DEUBG: send tx')
                                 console.log({
+                                    account,
                                     name,
                                     config,
                                 })
@@ -82,8 +80,4 @@ export function useContract<T extends Contract>(address: string, ABI: AbiItem[])
             }),
         }) as T
     }, [address, account, ABI])
-}
-
-export function useERC20TokenContract(address: string) {
-    return useContract<ERC20>(address, ERC20ABI as AbiItem[]) as ERC20
 }

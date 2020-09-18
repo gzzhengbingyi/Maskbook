@@ -1,6 +1,5 @@
 import { useAsync } from 'react-use'
-import { useAccount } from './useAccount'
-import { useERC20TokenContract } from './useContract'
+import { useERC20TokenContract } from './useERC20TokenContract'
 import { Token, EthereumTokenType } from '../types'
 import { useChainId } from './useChainId'
 
@@ -10,11 +9,9 @@ function resolveSettleResult<T>(result: PromiseSettledResult<T>, fallback: T) {
 
 export function useToken(type: EthereumTokenType, token: PartialRequired<Token, 'address'>) {
     const chainId = useChainId()
-    const account = useAccount()
     const erc20Contract = useERC20TokenContract(token.address)
 
     return useAsync(async () => {
-        if (!account) return
         if (!token.address) return
 
         // Ether
@@ -46,5 +43,5 @@ export function useToken(type: EthereumTokenType, token: PartialRequired<Token, 
         // TODO:
         // ERC721
         return
-    }, [account, chainId, type, token.address])
+    }, [chainId, type, token.address, erc20Contract])
 }

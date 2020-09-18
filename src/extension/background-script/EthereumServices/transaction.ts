@@ -13,6 +13,7 @@ import { isSameAddress } from '../../../web3/helpers'
 import { getNonce, resetNonce, commitNonce } from '../NonceService'
 import type { ChainId } from '../../../web3/types'
 import { ProviderType } from '../../../web3/types'
+import { unreachable } from '../../../utils/utils'
 
 //#region tracking wallets
 let wallets: WalletRecord[] = []
@@ -93,7 +94,7 @@ export async function* sendTransaction(from: string, config: TransactionConfig) 
             yield stage
         }
     } catch (err) {
-        console.log('DEBUG: err')
+        console.log('DEBUG: sendTransaction error')
         console.log(err)
         if (err.message.includes('nonce too low')) resetNonce(from)
         // TODO:
@@ -108,16 +109,19 @@ export async function* sendTransaction(from: string, config: TransactionConfig) 
  * @param config
  */
 export async function sendSignedTransaction(from: string, config: TransactionConfig) {
-    throw new Error('not implemented')
+    throw new Error('TO BE IMPLEMENTED')
 }
 
 /**
  * Call transaction on different providers with a given account
- * same as `eh_call`
+ * same as `eth_call`
  * @param from
  * @param config
  */
-export async function callTransaction(from: string, config: TransactionConfig) {
+export async function callTransaction(from: string | undefined, config: TransactionConfig) {
+    // use can use callTransaction without account
+    if (!from) return createWeb3(Maskbook.createProvider()).eth.call(config)
+
     const wallet = wallets.find((x) => isSameAddress(x.address, from))
     if (!wallet) throw new Error('the wallet does not exists')
 
@@ -127,5 +131,5 @@ export async function callTransaction(from: string, config: TransactionConfig) {
         const connector = await WalletConnect.createConnector()
         return createWeb3(Maskbook.createProvider(connector.chainId as ChainId), []).eth.call(config)
     }
-    throw new Error(`cannot call transaction for wallet ${wallet.address}`)
+    unreachable(wallet.provider)
 }
