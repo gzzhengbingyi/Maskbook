@@ -1,37 +1,25 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import classNames from 'classnames'
-import { makeStyles, Theme, createStyles, Typography } from '@material-ui/core'
-import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward'
+import React, { useState, useCallback } from 'react'
+import { makeStyles, Theme, createStyles, CircularProgress } from '@material-ui/core'
 import { useStylesExtends } from '../../../components/custom-ui-helper'
-import ActionButton from '../../../extension/options-page/DashboardComponents/ActionButton'
-import { TokenAmountPanel } from './TokenAmountPanel'
-import BigNumber from 'bignumber.js'
 import { MessageCenter, MaskbookWalletMessages } from '../../Wallet/messages'
-import { useERC20Token } from '../../../web3/hooks/useERC20Token'
-import type { ERC20Token } from '../../../web3/types'
+import { useToken } from '../../../web3/hooks/useToken'
+import { Token, EthereumTokenType } from '../../../web3/types'
 import { useRemoteControlledDialog } from '../../../utils/hooks/useRemoteControlledDialog'
+import { useConstant } from '../../../web3/hooks/useConstant'
+import { UniswapTrade } from './UniswapTrade'
 
 const useStyles = makeStyles((theme: Theme) => {
     return createStyles({
-        form: {
-            width: 300,
-            margin: `${theme.spacing(2)}px auto`,
+        root: {
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 266,
+            position: 'relative',
         },
-        section: {
-            textAlign: 'center',
-            margin: `${theme.spacing(1)}px auto`,
-        },
-        divider: {
-            marginTop: theme.spacing(-0.5),
-            marginBottom: theme.spacing(-1),
-        },
-        icon: {
-            cursor: 'pointer',
-        },
-        submit: {
-            marginTop: theme.spacing(2),
-            paddingTop: 12,
-            paddingBottom: 12,
+        progress: {
+            bottom: theme.spacing(1),
+            right: theme.spacing(1),
+            position: 'absolute',
         },
     })
 })
@@ -41,27 +29,34 @@ export interface UniswapTraderProps extends withClasses<KeysInferFromUseStyles<t
 }
 
 export function UniswapTrader(props: UniswapTraderProps) {
+    const ETH_ADDRESS = useConstant('ETH_ADDRESS')
+
+    const { address } = props
     const classes = useStylesExtends(useStyles(), props)
 
-    //#region get token info on chain
+    //#region get token info from chain
     const [reversed, setReversed] = useState(false)
 
-    const [token0Address, setToken0Address] = useState(props.address)
-    const [token1Address, setToken1Address] = useState('')
+    const [inputTokenAddress, setInputTokenAddress] = useState(ETH_ADDRESS)
+    const [outputTokenAddress, setOutputTokenAddress] = useState(address === ETH_ADDRESS ? '' : address) // KANA for rinkeby testnet only
 
-    const { value: token0, loading: loadingToken0 } = useERC20Token(token0Address)
-    const { value: token1, loading: loadingToken1 } = useERC20Token(token1Address)
+    const isEtherInputToken = inputTokenAddress === ETH_ADDRESS
+    const isEtherOutputToken = outputTokenAddress === ETH_ADDRESS
 
-    const ERC20TokenA = reversed ? token1 : token0
-    const ERC20TokenB = reversed ? token0 : token1
-
-    const loadingERC20TokenA = reversed ? loadingToken1 : loadingToken0
-    const loadingERC20TokenB = reversed ? loadingToken0 : loadingToken1
+    const { value: inputToken, loading: loadingInputToken, error: errorInputToken } = useToken(
+        isEtherInputToken ? EthereumTokenType.Ether : EthereumTokenType.ERC20,
+        isEtherInputToken ? ETH_ADDRESS : inputTokenAddress,
+    )
+    const { value: outputToken, loading: loadingOutputToken, error: errorOutputToken } = useToken(
+        isEtherOutputToken ? EthereumTokenType.Ether : EthereumTokenType.ERC20,
+        isEtherOutputToken ? ETH_ADDRESS : outputTokenAddress,
+    )
     //#endregion
 
     //#region select token
     const [focusedTokenAddress, setFocusedTokenAddress] = useState<string>('')
 
+    // select token in remote controlled dialog
     const [, setOpen] = useRemoteControlledDialog<MaskbookWalletMessages, 'selectERC20TokenDialogUpdated'>(
         MessageCenter,
         'selectERC20TokenDialogUpdated',
@@ -70,120 +65,50 @@ export function UniswapTrader(props: UniswapTraderProps) {
                 if (ev.open) return
                 const { address = '' } = ev.token ?? {}
                 if (!address) return
-                token0Address === focusedTokenAddress ? setToken0Address(address) : setToken1Address(address)
+                inputTokenAddress === focusedTokenAddress
+                    ? setInputTokenAddress(address)
+                    : setOutputTokenAddress(address)
             },
-            [token0Address, focusedTokenAddress],
+            [inputTokenAddress, focusedTokenAddress],
         ),
     )
 
     // open select token dialog
-    const onTokenSelectChipClick = useCallback(
-        (token?: ERC20Token | null) => {
+    const onTokenChipClick = useCallback(
+        (token: Token) => {
             setFocusedTokenAddress(token?.address ?? '')
             setOpen({
                 open: true,
                 address: token?.address,
-                excludeTokens: [token0Address, token1Address].filter(Boolean),
+                excludeTokens: [inputTokenAddress, outputTokenAddress].filter(Boolean),
             })
         },
-        [setOpen, token0Address, token1Address],
+        [setOpen, inputTokenAddress, outputTokenAddress],
     )
     //#endregion
 
-    //#region calc amount
-    const [amountA, setAmountA] = useState('0')
-    const [amountB, setAmountB] = useState('0')
-
-    const tradeAmountA = new BigNumber(amountA)
-    const tradeAmountB = new BigNumber(amountB)
-
-    const balanceA = new BigNumber(ERC20TokenA?.balanceOf ?? '0')
-    const balanceB = new BigNumber(ERC20TokenB?.balanceOf ?? '0')
-
-    useEffect(() => {
-        // do it
-    }, [amountA, amountB])
-    //#endregion
-
+    console.log('DEBUG: fetching tokens')
     console.log({
-        token0Address,
-        token1Address,
-        tradeAmountA: tradeAmountA.toFixed(),
-        tradeAmountB: tradeAmountB.toFixed(),
-        balanceA: balanceA.toFixed(),
-        balanceB: balanceB.toFixed(),
-        ERC20TokenA: ERC20TokenA,
-        ERC20TokenB: ERC20TokenB,
+        inputToken,
+        outputToken,
     })
+
     return (
-        <form className={classes.form} noValidate autoComplete="off">
-            <div className={classes.section}>
-                <TokenAmountPanel
-                    label="From"
-                    token={ERC20TokenA}
-                    amount={amountA}
-                    onAmountChange={setAmountA}
-                    TextFieldProps={{
-                        disabled: !ERC20TokenA,
-                    }}
-                    SelectTokenChip={{
-                        loading: loadingERC20TokenA,
-                        ChipProps: {
-                            onClick: () => onTokenSelectChipClick(ERC20TokenA),
-                        },
+        <div className={classes.root}>
+            {inputToken && outputToken ? (
+                <UniswapTrade
+                    reversed={reversed}
+                    inputToken={inputToken}
+                    outputToken={outputToken}
+                    UniswapTradeFormProps={{
+                        onReverseClick: () => setReversed((x) => !x),
+                        onTokenChipClick,
                     }}
                 />
-            </div>
-            <div className={classNames(classes.section, classes.divider)}>
-                <Typography color="primary">
-                    <ArrowDownwardIcon className={classes.icon} onClick={() => setReversed((x) => !x)} />
-                </Typography>
-            </div>
-            <div className={classes.section}>
-                <TokenAmountPanel
-                    label="To"
-                    token={ERC20TokenB}
-                    amount={amountB}
-                    onAmountChange={setAmountB}
-                    MaxChipProps={{ style: { display: 'none' } }}
-                    TextFieldProps={{
-                        disabled: !ERC20TokenB,
-                    }}
-                    SelectTokenChip={{
-                        loading: loadingERC20TokenB,
-                        ChipProps: {
-                            onClick: () => onTokenSelectChipClick(ERC20TokenB),
-                        },
-                    }}
-                />
-            </div>
-            <div className={classes.section}>
-                <ActionButton
-                    className={classes.submit}
-                    fullWidth
-                    variant="contained"
-                    size="large"
-                    disabled={
-                        !ERC20TokenA?.address ||
-                        !ERC20TokenB?.address ||
-                        tradeAmountA.isZero() ||
-                        tradeAmountB.isZero() ||
-                        tradeAmountA.isGreaterThan(balanceA) ||
-                        tradeAmountB.isGreaterThan(balanceB)
-                    }
-                    onClick={() => console.log('clicked!')}>
-                    {(() => {
-                        if (tradeAmountA.isZero() || tradeAmountB.isZero()) return 'Enter an amount'
-                        if (!ERC20TokenA || !ERC20TokenB) {
-                            if (!reversed && tradeAmountA.isPositive()) return 'Select a token'
-                            if (reversed && tradeAmountB.isPositive()) return 'Select a token'
-                        }
-                        if (balanceA.isLessThan(tradeAmountA)) return `Insufficient ${ERC20TokenA?.symbol} balance`
-                        if (balanceB.isLessThan(tradeAmountB)) return `Insufficient ${ERC20TokenB?.symbol} balance`
-                        return 'Swap'
-                    })()}
-                </ActionButton>
-            </div>
-        </form>
+            ) : null}
+            {loadingInputToken || loadingOutputToken ? (
+                <CircularProgress className={classes.progress} size={15} />
+            ) : null}
+        </div>
     )
 }

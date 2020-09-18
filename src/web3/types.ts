@@ -4,8 +4,8 @@ export enum ProviderType {
     WalletConnect = 'WalletConnect',
 }
 
-export interface ERC20Token {
-    chainId?: ChainId
+export interface Token {
+    chainId: ChainId
     address: string
     name: string
     symbol: string
@@ -20,7 +20,7 @@ export enum ChainId {
 }
 
 export enum EthereumTokenType {
-    ETH = 0,
+    Ether = 0,
     ERC20 = 1,
     ERC721 = 2,
 }

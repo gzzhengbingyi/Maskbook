@@ -1,9 +1,19 @@
 import { createWeb3 } from './web3'
 import { createProvider } from './providers/Maskbook'
 import type { TransactionConfig } from 'web3-core'
-import { ChainId } from '../../../web3/types'
+import { ChainId, ProviderType } from '../../../web3/types'
+import { getDefaultWallet } from '../../../plugins/Wallet/wallet'
+import {
+    currentMaskbookChainIdSettings,
+    currentMetaMaskChainIdSettings,
+    currentWalletConnectChainIdSettings,
+} from '../../../settings/settings'
 
 export async function getChainId() {
+    const wallet = await getDefaultWallet()
+    if (wallet?.provider === ProviderType.Maskbook) return currentMaskbookChainIdSettings.value
+    if (wallet?.provider === ProviderType.MetaMask) return currentMetaMaskChainIdSettings.value
+    if (wallet?.provider === ProviderType.WalletConnect) return currentWalletConnectChainIdSettings.value
     return ChainId.Mainnet
 }
 

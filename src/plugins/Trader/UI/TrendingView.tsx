@@ -35,7 +35,8 @@ import { useCurrentCurrency } from '../hooks/useCurrentCurrency'
 import { useI18N } from '../../../utils/i18n-next-ui'
 import { CoinMarketCapIcon } from '../../../resources/CoinMarketCap'
 import { UniswapTrader } from './UniswapTrader'
-import { currentDataProviderSettings, currentSwapProviderSettings } from '../settings'
+import { currentSwapProviderSettings } from '../settings'
+import { useConstant } from '../../../web3/hooks/useConstant'
 
 const useStyles = makeStyles((theme: Theme) => {
     const internalName = getActivatedUI()?.internalName
@@ -141,6 +142,8 @@ export interface TrendingViewProps extends withClasses<KeysInferFromUseStyles<ty
 }
 
 export function TrendingView(props: TrendingViewProps) {
+    const ETH_ADDRESS = useConstant('ETH_ADDRESS')
+
     const { t } = useI18N()
     const classes = useStyles()
     const [tabIndex, setTabIndex] = useState(0)
@@ -251,7 +254,7 @@ export function TrendingView(props: TrendingViewProps) {
                         </>
                     ) : null}
                     {tabIndex === 1 ? <TickersTable tickers={tickers} platform={dataProvider} /> : null}
-                    {tabIndex === 2 && coin.eth_address ? <UniswapTrader address={coin.eth_address} /> : null}
+                    {tabIndex === 2 && canSwap ? <UniswapTrader address={coin.eth_address ?? ETH_ADDRESS} /> : null}
                 </Paper>
             </CardContent>
             <CardActions className={classes.footer}>

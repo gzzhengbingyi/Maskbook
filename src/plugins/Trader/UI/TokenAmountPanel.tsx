@@ -1,4 +1,4 @@
-import React, { useCallback, ChangeEvent } from 'react'
+import React, { useEffect, useCallback, ChangeEvent, useState, useMemo } from 'react'
 import {
     makeStyles,
     Theme,
@@ -11,15 +11,12 @@ import {
     ChipProps,
     TextFieldProps,
 } from '@material-ui/core'
-import type { ERC20TokenForUI } from '../types'
+import type { TokenForUI } from '../types'
 import { MIN_AMOUNT_LENGTH, MAX_AMOUNT_LENGTH } from '../constants'
 import { SelectTokenChip, SelectTokenChipProps } from './SelectTokenChip'
 import { formatBalance } from '../../Wallet/formatter'
 import BigNumber from 'bignumber.js'
 import { useCapturedEvents } from '../../../utils/hooks/useCapturedEvents'
-
-const RE_MATCH_PARTIAL_AMOUNT = /^\d*\.(?:0*)?$/
-const RE_MATCH_WHOLE_AMOUNT = /^\d*\.?\d*$/
 
 const useStyles = makeStyles((theme: Theme) => {
     return createStyles({
@@ -50,7 +47,7 @@ export interface TokenAmountPanelProps {
     amount: string
     onAmountChange: (amount: string) => void
     label: string
-    token?: ERC20TokenForUI | null
+    token?: TokenForUI | null
     InputProps?: Partial<InputProps>
     MaxChipProps?: Partial<ChipProps>
     SelectTokenChip?: Partial<SelectTokenChipProps>
@@ -58,22 +55,43 @@ export interface TokenAmountPanelProps {
 }
 
 export function TokenAmountPanel(props: TokenAmountPanelProps) {
+    const { amount, token, onAmountChange, label } = props
+
     const classes = useStyles()
     const [, inputRef] = useCapturedEvents()
-    const { amount, token, onAmountChange, label } = props
+
+    //#region sync amount and amountForUI
+    const { RE_MATCH_WHOLE_AMOUNT, RE_MATCH_PARTIAL_AMOUNT } = useMemo(() => {
+        const fractionLength = token?.decimals ?? 18
+        return {
+            RE_MATCH_WHOLE_AMOUNT: new RegExp(`^\\d*\\.?\\d{0,${fractionLength}}$`), // d.ddd...d
+            RE_MATCH_PARTIAL_AMOUNT: new RegExp(`^\\d*\\.(?:\\d{0,${fractionLength - 1}}0)?$`), // d.ddd...0
+        }
+    }, [token?.decimals])
+    const [amountForUI, setAmountForUI] = useState('')
+
+    useEffect(() => {
+        setAmountForUI(amount === '0' ? '' : amount)
+    }, [amount])
 
     const onChange = useCallback(
         (ev: ChangeEvent<HTMLInputElement>) => {
             if (typeof token?.decimals === 'undefined') return
             const amount_ = ev.currentTarget.value.replace(/,/g, '.')
-            if (!amount_) onAmountChange('0')
-            // typing the fraction part
-            else if (RE_MATCH_PARTIAL_AMOUNT.test(amount_)) onAmountChange(amount_)
-            else if (RE_MATCH_WHOLE_AMOUNT.test(amount_))
-                onAmountChange(new BigNumber(amount_).multipliedBy(new BigNumber(10).pow(token.decimals)).toFixed())
+            if (!amount_) {
+                setAmountForUI('')
+                onAmountChange('0')
+            } else if (amount_ === '0') setAmountForUI('0')
+            else if (RE_MATCH_PARTIAL_AMOUNT.test(amount_)) setAmountForUI(amount_)
+            else if (RE_MATCH_WHOLE_AMOUNT.test(amount_)) {
+                const v = new BigNumber(amount_).multipliedBy(new BigNumber(10).pow(token.decimals)).toFixed()
+                setAmountForUI(v)
+                onAmountChange(v)
+            }
         },
-        [token?.decimals],
+        [onAmountChange, token?.decimals, RE_MATCH_WHOLE_AMOUNT, RE_MATCH_PARTIAL_AMOUNT],
     )
+    //#endregion
 
     return (
         <TextField
@@ -83,16 +101,16 @@ export function TokenAmountPanel(props: TokenAmountPanelProps) {
             required
             type="text"
             value={
-                amount === '0'
+                amountForUI === ''
                     ? ''
-                    : RE_MATCH_PARTIAL_AMOUNT.test(amount)
-                    ? amount
-                    : formatBalance(new BigNumber(amount), token?.decimals ?? 0, MAX_AMOUNT_LENGTH - 2)
+                    : RE_MATCH_PARTIAL_AMOUNT.test(amountForUI)
+                    ? amountForUI
+                    : formatBalance(new BigNumber(amountForUI), token?.decimals ?? 0, MAX_AMOUNT_LENGTH - 2)
             }
             variant="outlined"
             onChange={onChange}
             InputProps={{
-                inputRef: inputRef,
+                inputRef,
                 inputProps: {
                     autoComplete: 'off',
                     autoCorrect: 'off',
@@ -114,7 +132,7 @@ export function TokenAmountPanel(props: TokenAmountPanelProps) {
                         justifyContent="center"
                         alignItems="flex-end">
                         <Typography className={classes.balance} color="textSecondary" variant="body2" component="span">
-                            Balance: {formatBalance(new BigNumber(token?.balanceOf), token.decimals, 6)}
+                            Balance: {formatBalance(new BigNumber('0'), token.decimals, 6)}
                         </Typography>
                         <Box display="flex">
                             <Chip
@@ -122,7 +140,7 @@ export function TokenAmountPanel(props: TokenAmountPanelProps) {
                                 size="small"
                                 label="MAX"
                                 clickable
-                                onClick={() => onAmountChange(token.balanceOf)}
+                                onClick={() => onAmountChange('0')}
                                 {...props.MaxChipProps}
                             />
                             <SelectTokenChip token={token} {...props.SelectTokenChip} />

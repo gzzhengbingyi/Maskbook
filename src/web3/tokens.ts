@@ -1,7 +1,7 @@
 import contractMap from 'eth-contract-metadata'
 import mainnet from './erc20/mainnet.json'
 import rinkeby from './erc20/rinkeby.json'
-import { ChainId, ERC20Token } from './types'
+import { ChainId, Token } from './types'
 import { uniqBy } from 'lodash-es'
 
 const ERC20Tokens = {
@@ -25,13 +25,10 @@ const ERC20Tokens = {
         chainId: ChainId.Rinkeby,
         ...x,
     })),
-    [ChainId.Ropsten]: [].map((x) => ({
-        chainId: ChainId.Ropsten,
-        ...(x as ERC20Token),
-    })),
+    [ChainId.Ropsten]: [],
     [ChainId.Kovan]: [],
 }
 
 export function getERC20Tokens(chainId: ChainId) {
-    return uniqBy(ERC20Tokens[chainId] as ERC20Token[], (token) => token.address.toUpperCase())
+    return uniqBy(ERC20Tokens[chainId] as Token[], (token) => token.address.toUpperCase())
 }

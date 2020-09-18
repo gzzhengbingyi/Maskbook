@@ -2,7 +2,7 @@ import React from 'react'
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles'
 import { ListItem, ListItemText, Typography, ListItemIcon } from '@material-ui/core'
 import { TokenIcon } from './TokenIcon'
-import type { ERC20Token } from '../../../web3/types'
+import type { Token } from '../../../web3/types'
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -28,7 +28,7 @@ export interface TokenInListProps {
     index: number
     style: any
     data: {
-        tokens: ERC20Token[]
+        tokens: Token[]
         excludeTokens: string[]
         selected: string
         onSelect: (address: string) => void

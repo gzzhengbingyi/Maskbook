@@ -3,9 +3,7 @@ import { EthereumAddress } from 'wallet.ts'
 import type { Contract } from 'web3-eth-contract'
 import type { AbiItem, AbiOutput } from 'web3-utils'
 import ERC20ABI from '../../contracts/splitter/ERC20.json'
-import RouterV2ABI from '../../contracts/uniswap-v2-router/RouterV2.json'
 import type { Erc20 as ERC20 } from '../../contracts/splitter/ERC20'
-import type { RouterV2 } from '../../contracts/uniswap-v2-router/RouterV2'
 import Services from '../../extension/service'
 import { useAccount } from './useAccount'
 import { web3 } from '../web3'
@@ -46,9 +44,6 @@ export function useContract<T extends Contract>(address: string, ABI: AbiItem[])
                         (x) => x.type === 'function' && x.name === name,
                     )
                     return (...args: any[]) => {
-                        console.log('DEBUG: invoke')
-                        console.log(args)
-
                         const cached = method(...args)
                         return {
                             async call(config: Object) {
@@ -61,18 +56,23 @@ export function useContract<T extends Contract>(address: string, ABI: AbiItem[])
                                 return decodeHexString(
                                     methodABI ? methodABI.outputs ?? [] : [],
                                     await Services.Ethereum.callTransaction(account, {
-                                        ...config,
                                         to: contract.options.address,
                                         data: cached.encodeABI(),
+                                        ...config,
                                     }),
                                 )
                             },
                             send(config: Object) {
+                                console.log('DEUBG: send')
+                                console.log({
+                                    name,
+                                    config,
+                                })
                                 return iteratorToPromiEvent(
                                     Services.Ethereum.sendTransaction(account, {
-                                        ...config,
                                         to: contract.options.address,
                                         data: cached.encodeABI(),
+                                        ...config,
                                     }),
                                 )
                             },
@@ -80,14 +80,10 @@ export function useContract<T extends Contract>(address: string, ABI: AbiItem[])
                     }
                 },
             }),
-        })
+        }) as T
     }, [address, account, ABI])
 }
 
 export function useERC20TokenContract(address: string) {
     return useContract<ERC20>(address, ERC20ABI as AbiItem[]) as ERC20
-}
-
-export function useRouterV2Contract(address: string) {
-    return useContract<RouterV2>(address, RouterV2ABI as AbiItem[]) as RouterV2
 }

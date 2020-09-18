@@ -2,7 +2,7 @@ import React from 'react'
 import classNames from 'classnames'
 import { makeStyles, Theme, createStyles, Chip, Avatar, ChipProps, CircularProgress } from '@material-ui/core'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
-import type { ERC20TokenForUI } from '../types'
+import type { TokenForUI } from '../types'
 import { noop } from 'lodash-es'
 import { TokenIcon } from '../../../extension/options-page/DashboardComponents/TokenIcon'
 
@@ -23,7 +23,7 @@ const useStyles = makeStyles((theme: Theme) => {
 })
 
 export interface SelectTokenChipProps {
-    token?: ERC20TokenForUI | null
+    token?: TokenForUI | null
     loading?: boolean
     readonly?: boolean
     ChipProps?: Partial<ChipProps>

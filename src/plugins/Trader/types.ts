@@ -1,4 +1,4 @@
-import type { ERC20Token } from '../../web3/types'
+import type { Token } from '../../web3/types'
 
 export interface Settings {
     currency: Currency
@@ -32,9 +32,8 @@ export interface Coin {
     eth_address?: string
 }
 
-export interface ERC20TokenForUI extends ERC20Token {
+export interface TokenForUI extends Token {
     logo?: string
-    balanceOf: string
 }
 
 export interface Market {

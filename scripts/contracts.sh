@@ -6,8 +6,8 @@
 
 # self hosted contracts
 
-declare -a contract_names=("happy-red-packet" "bulk-checkout" "splitter" "balance-checker" "uniswap-v2-router")
-declare -a contract_hosted=(true true true false false)
+declare -a contract_names=("happy-red-packet" "bulk-checkout" "splitter" "balance-checker" "pair" "uniswap-v2-router")
+declare -a contract_hosted=(true true true false false false)
 declare size=${#contract_names[@]}
 
 for ((i=0; i < $size; i++));
